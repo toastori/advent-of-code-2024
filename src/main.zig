@@ -39,7 +39,7 @@ pub fn main() !void {
         1 => try days.day1(&fin.any()),
         2 => try days.day2(&fin.any()),
         3 => try days.day3(&fin.any()),
-        4 => try days.day4(&fin.any(), @TypeOf(file_reader), &file_reader),
+        4 => try days.day4(&fin.any(), &file_reader.context),
         5 => try days.day5(&fin.any()),
         else => std.debug.print("Day{d} not available\n", .{day}),
     }

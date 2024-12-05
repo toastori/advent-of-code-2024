@@ -106,7 +106,7 @@ const Lines2 = struct {
     }
 };
 
-pub fn day4(fin: *const std.io.AnyReader, file_reader_T: type, file_reader: *const file_reader_T) !void {
+pub fn day4(fin: *const std.io.AnyReader, file_context: *const std.fs.File) !void {
     var line_len: usize = 0;
 
     // Part One
@@ -127,7 +127,7 @@ pub fn day4(fin: *const std.io.AnyReader, file_reader_T: type, file_reader: *con
     }
 
     // Part Two
-    try file_reader.context.seekTo(0);
+    try file_context.seekTo(0);
     var lines2 = Lines2{};
     var sum2: u32 = 0;
 
