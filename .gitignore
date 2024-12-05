@@ -1,0 +1,6 @@
+# Common zig gitignore
+.zig-cache/
+zig-out/
+
+# My input
+input/
