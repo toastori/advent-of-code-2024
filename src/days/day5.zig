@@ -12,7 +12,7 @@ pub fn day5(fin: *const std.io.AnyReader) !void {
 
     var bit_set_array: [90]std.bit_set.ArrayBitSet(u32, 91) = .{std.bit_set.ArrayBitSet(u32, 91).initEmpty()} ** 90;
     for (0..bit_set_array.len) |i| {
-        bit_set_array[i].set(90);
+        bit_set_array[i].set(90); // Set page 100 to be highest priority
     }
 
     while (try fin.readUntilDelimiterOrEof(&fin_buffer, '\n')) |line| { // Rules
@@ -49,10 +49,8 @@ pub fn day5(fin: *const std.io.AnyReader) !void {
             while (blk: { // Sorting
                 std.mem.swap(u8, &number_array[sort_i - 1], &number_array[sort_i]); // Swap with one before
                 sort_i -= 1;
-                if (sort_i == 0) break :blk false; // If head then break
                 const sort_i_u8: u8 = @intCast(sort_i);
                 break :blk !bit_set_array[pageToIndex(number_array[sort_i_u8])].isSet(pageToIndex(number_array[sort_i_u8 - 1])); // Is in order then break
-
             }) {}
         }
 

@@ -10,13 +10,15 @@ pub fn build(b: *std.Build) void {
     // for restricting supported target set are available.
     const target = b.standardTargetOptions(.{});
 
+    if (target.result.isMinGW()) @panic("This program does not support CLRF");
+
     // Standard optimization options allow the person running `zig build` to select
     // between Debug, ReleaseSafe, ReleaseFast, and ReleaseSmall. Here we do not
     // set a preferred release mode, allowing the user to decide how to optimize.
     const optimize = b.standardOptimizeOption(.{});
 
     const exe = b.addExecutable(.{
-        .name = "2024-zig",
+        .name = "aoc2024",
         .root_source_file = b.path("src/main.zig"),
         .target = target,
         .optimize = optimize,

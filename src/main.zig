@@ -8,6 +8,7 @@ fn invalidArg() void {
 
 fn invalidFile(filename: []const u8) void {
     std.debug.print("Invalid filename: file {s} not found\n", .{filename});
+    std.process.exit(1);
 }
 
 pub fn main() !void {
@@ -22,7 +23,7 @@ pub fn main() !void {
     // Handle wrong Args
     if (day == 0 or filename.len == 0) {
         invalidArg();
-        std.process.exit(1);
+        unreachable;
     }
 
     // Reader
@@ -31,16 +32,17 @@ pub fn main() !void {
         unreachable;
     };
     defer file.close();
-    const file_reader = file.reader();
-    var buffered_reader = std.io.bufferedReader(file_reader);
+
+    var buffered_reader = std.io.bufferedReader(file.reader());
     const fin = buffered_reader.reader();
 
     switch (day) {
         1 => try days.day1(&fin.any()),
         2 => try days.day2(&fin.any()),
         3 => try days.day3(&fin.any()),
-        4 => try days.day4(&fin.any(), &file_reader.context),
+        4 => try days.day4(&fin.any(), &file),
         5 => try days.day5(&fin.any()),
+        6 => try days.day6(&fin.any()),
         else => std.debug.print("Day{d} not available\n", .{day}),
     }
 }
