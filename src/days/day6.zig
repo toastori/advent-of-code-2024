@@ -2,7 +2,6 @@ const std = @import("std");
 
 var map_height: usize = 0;
 var map_width: usize = 0;
-var bit_set: std.DynamicBitSet = undefined;
 
 const DirectionEncode = packed struct {
     up: bool = false,
@@ -138,9 +137,10 @@ const Guard = struct {
     }
 };
 
-fn solveMapBase(guard_instance: Guard, map: *std.ArrayList(u8)) !void {
+fn solveMapBase(guard_instance: Guard, map: *std.ArrayList(u8)) !u32 {
     var virtualMap = try std.ArrayList(u8).initCapacity(map.allocator, map.items.len);
 
+    var sum2: u32 = 0;
     var guard = guard_instance;
 
     while (!guard.coord().outOfBounds()) {
@@ -164,12 +164,13 @@ fn solveMapBase(guard_instance: Guard, map: *std.ArrayList(u8)) !void {
                     defer virtualMap.clearRetainingCapacity();
 
                     virtualMap.items[front_coord.toIndex()] = '#';
-                    bit_set.setValue(front_coord.toIndex(), solveMapMakeStuck(guard, virtualMap.items));
+                    if (solveMapMakeStuck(guard, virtualMap.items)) sum2 += 1;
                 }
             }
             guard.walk();
         }
     }
+    return sum2;
 }
 
 fn solveMapMakeStuck(guard_instance: Guard, map: []u8) bool {
@@ -221,15 +222,11 @@ pub fn day6(allocator: std.mem.Allocator, fin: *const std.io.AnyReader) !void {
         }
     }
 
-    bit_set = try std.DynamicBitSet.initEmpty(allocator, map.items.len);
-
-    try solveMapBase(guard, &map);
+    sum2 = try solveMapBase(guard, &map);
 
     for (map.items) |c| { // Part One
         sum1 += if (c != '.' and c != '#') 1 else 0;
     }
-
-    sum2 = @intCast(bit_set.count());
 
     std.debug.print("Part One: {d}\n", .{sum1});
     std.debug.print("Part Two: {d}\n", .{sum2});
