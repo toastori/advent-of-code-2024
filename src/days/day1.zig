@@ -1,15 +1,10 @@
 const std = @import("std");
 
-pub fn day1(fin: *const std.io.AnyReader) !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}).init;
-    const allocator = gpa.allocator();
-
+pub fn day1(allocator: std.mem.Allocator, fin: *const std.io.AnyReader) !void {
     var file_buffer: [15]u8 = undefined;
 
     var left_list = std.ArrayList(u32).init(allocator);
-    defer left_list.deinit();
     var right_list = std.ArrayList(u32).init(allocator);
-    defer right_list.deinit();
 
     while (try fin.readUntilDelimiterOrEof(&file_buffer, '\n')) |line| {
         const left = line[0..5];
@@ -24,7 +19,6 @@ pub fn day1(fin: *const std.io.AnyReader) !void {
 
     // Part 2
     var right_count_map = std.AutoHashMap(u32, u16).init(allocator);
-    defer right_count_map.deinit();
 
     var sum1: u32 = 0;
     // Part 2

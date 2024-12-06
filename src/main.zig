@@ -1,4 +1,5 @@
 const std = @import("std");
+const builtin = @import("builtin");
 const days = @import("days.zig");
 
 fn invalidArg() void {
@@ -12,7 +13,12 @@ fn invalidFile(filename: []const u8) void {
 }
 
 pub fn main() !void {
-    var args = std.process.args();
+    var arena = std.heap.ArenaAllocator.init(std.heap.c_allocator);
+    defer arena.deinit();
+
+    const allocator = arena.allocator();
+
+    var args = if (builtin.os.tag != .windows) std.process.args() else try std.process.argsWithAllocator(allocator);
 
     // Skip Executable
     _ = args.next();
@@ -37,12 +43,12 @@ pub fn main() !void {
     const fin = buffered_reader.reader();
 
     switch (day) {
-        1 => try days.day1(&fin.any()),
-        2 => try days.day2(&fin.any()),
+        1 => try days.day1(allocator, &fin.any()),
+        2 => try days.day2(allocator, &fin.any()),
         3 => try days.day3(&fin.any()),
         4 => try days.day4(&fin.any(), &file),
         5 => try days.day5(&fin.any()),
-        6 => try days.day6(&fin.any()),
+        6 => try days.day6(allocator, &fin.any()),
         else => std.debug.print("Day{d} not available\n", .{day}),
     }
 }

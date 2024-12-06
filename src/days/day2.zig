@@ -6,18 +6,13 @@ const Order = enum(u8) {
     descending,
 };
 
-pub fn day2(fin: *const std.io.AnyReader) !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}).init;
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
-
+pub fn day2(allocator: std.mem.Allocator, fin: *const std.io.AnyReader) !void {
     var fin_buffer: [128]u8 = undefined;
 
     var safe_lines1: u32 = 0;
     var safe_lines2: u32 = 0;
 
     var line_list = std.ArrayList(i16).init(allocator);
-    defer line_list.deinit();
 
     main_while: while (try fin.readUntilDelimiterOrEof(&fin_buffer, '\n')) |line| : (line_list.clearRetainingCapacity()) { // Part Two
         var safe = false;

@@ -140,7 +140,6 @@ const Guard = struct {
 
 fn solveMapBase(guard_instance: Guard, map: *std.ArrayList(u8)) !void {
     var virtualMap = try std.ArrayList(u8).initCapacity(map.allocator, map.items.len);
-    defer virtualMap.deinit();
 
     var guard = guard_instance;
 
@@ -196,18 +195,13 @@ fn solveMapMakeStuck(guard_instance: Guard, map: []u8) bool {
     return false;
 }
 
-pub fn day6(fin: *const std.io.AnyReader) !void {
+pub fn day6(allocator: std.mem.Allocator, fin: *const std.io.AnyReader) !void {
     var sum1: u32 = 0;
     var sum2: u32 = 0;
 
     var fin_buffer: [160]u8 = undefined;
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}).init;
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
-
     var map = std.ArrayList(u8).init(allocator);
-    defer map.deinit();
 
     var guard: Guard = undefined;
     var guard_found = false;
@@ -228,7 +222,6 @@ pub fn day6(fin: *const std.io.AnyReader) !void {
     }
 
     bit_set = try std.DynamicBitSet.initEmpty(allocator, map.items.len);
-    defer bit_set.deinit();
 
     try solveMapBase(guard, &map);
 
