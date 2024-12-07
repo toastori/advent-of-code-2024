@@ -23,24 +23,24 @@ const OpWithConcatSequence = struct {
         return self.arr[self.len] == 0;
     }
 
-    const Tuple_u64_bool = struct {result: u64, no_concat: bool};
+    const Tuple_u64_bool = struct { result: u64, no_concat: bool };
 
     // Return `result` and whether concat involved in calculation
     fn solve(self: @This(), nums: []const u64) Tuple_u64_bool {
         var result = nums[0];
         var no_concat: bool = true;
-        var buf: [32]u8 = undefined;
         for (nums[1..], self.arr[0..self.len]) |num, op| {
             switch (op) {
                 0 => result += num,
                 1 => result *= num,
                 else => {
-                    result = std.fmt.parseInt(u64, std.fmt.bufPrint(&buf, "{d}{d}", .{ result, num }) catch unreachable, 10) catch unreachable;
+                    const num_f32: f32 = @floatFromInt(num);
+                    result = result * (10 * std.math.pow(u64, 10, @intFromFloat(@log10(num_f32)))) + num;
                     no_concat = false;
                 },
             }
         }
-        return .{.result = result, .no_concat = no_concat};
+        return .{ .result = result, .no_concat = no_concat };
     }
 };
 
