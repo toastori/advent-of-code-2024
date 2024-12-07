@@ -31,7 +31,7 @@ const OpWithConcatSequence = struct {
                 0 => result += num & std.math.maxInt(u32),
                 1 => result *= num & std.math.maxInt(u32),
                 else => {
-                    result = result * std.math.pow(u64, 10, num >> 58) + (num & std.math.maxInt(u32));
+                    result = result * (num >> 32) + (num & std.math.maxInt(u32));
                 },
             }
         }
@@ -67,7 +67,7 @@ pub fn day7(fin: *const std.io.AnyReader) !void {
 
         while (tokenizer.next()) |word| : (nums_count += 1) {
             nums[nums_count] = try std.fmt.parseInt(u64, word, 10);
-            nums[nums_count] += @intCast(word.len << 58);
+            nums[nums_count] += std.math.pow(u64, 10, @intCast(word.len)) << 32;
         }
 
         const nums_slice = nums[0..nums_count];
