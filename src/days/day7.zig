@@ -25,14 +25,13 @@ const OpWithConcatSequence = struct {
 
     // Return `result` and whether concat involved in calculation
     fn solve(self: @This(), nums: []const u64) u64 {
-        var result = nums[0];
+        var result = nums[0] & std.math.maxInt(u32);
         for (nums[1..], self.arr[0..self.len]) |num, op| {
             switch (op) {
-                0 => result += num,
-                1 => result *= num,
+                0 => result += num & std.math.maxInt(u32),
+                1 => result *= num & std.math.maxInt(u32),
                 else => {
-                    const num_f32: f32 = @floatFromInt(num);
-                    result = result * (10 * std.math.pow(u64, 10, @intFromFloat(@log10(num_f32)))) + num;
+                    result = result * std.math.pow(u64, 10, num >> 58) + (num & std.math.maxInt(u32));
                 },
             }
         }
@@ -42,11 +41,11 @@ const OpWithConcatSequence = struct {
 
 // Original Part One Code
 fn solveOpSequence(nums: []const u64, operators: usize) u64 {
-    var result = nums[0];
+    var result = nums[0] & std.math.maxInt(u32);
     for (nums[1..], 0..) |num, op_index| {
         switch (operators & (@as(usize, 1) << @intCast(op_index))) {
-            0 => result += num,
-            else => result *= num,
+            0 => result += num & std.math.maxInt(u32),
+            else => result *= num & std.math.maxInt(u32),
         }
     }
     return result;
@@ -68,6 +67,7 @@ pub fn day7(fin: *const std.io.AnyReader) !void {
 
         while (tokenizer.next()) |word| : (nums_count += 1) {
             nums[nums_count] = try std.fmt.parseInt(u64, word, 10);
+            nums[nums_count] += @intCast(word.len << 58);
         }
 
         const nums_slice = nums[0..nums_count];
@@ -88,7 +88,6 @@ pub fn day7(fin: *const std.io.AnyReader) !void {
         var op_cat_sequence = OpWithConcatSequence.initAllAdd(operator_count);
         while (blk: {
             if (op_cat_sequence.solve(nums_slice) == result) {
-                // if (calc.no_concat) sum1 += result;
                 sum2 += result;
                 break :blk false;
             }
