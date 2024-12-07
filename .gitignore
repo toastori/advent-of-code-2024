@@ -4,3 +4,5 @@ zig-out/
 
 # My input
 input/
+*.txt
+*.py

@@ -23,12 +23,9 @@ const OpWithConcatSequence = struct {
         return self.arr[self.len] == 0;
     }
 
-    const Tuple_u64_bool = struct { result: u64, no_concat: bool };
-
     // Return `result` and whether concat involved in calculation
-    fn solve(self: @This(), nums: []const u64) Tuple_u64_bool {
+    fn solve(self: @This(), nums: []const u64) u64 {
         var result = nums[0];
-        var no_concat: bool = true;
         for (nums[1..], self.arr[0..self.len]) |num, op| {
             switch (op) {
                 0 => result += num,
@@ -36,25 +33,24 @@ const OpWithConcatSequence = struct {
                 else => {
                     const num_f32: f32 = @floatFromInt(num);
                     result = result * (10 * std.math.pow(u64, 10, @intFromFloat(@log10(num_f32)))) + num;
-                    no_concat = false;
                 },
             }
         }
-        return .{ .result = result, .no_concat = no_concat };
+        return result;
     }
 };
 
 // Original Part One Code
-// fn solveOpSequence(nums: []const u64, operators: usize) u64 {
-//     var result = nums[0];
-//     for (nums[1..], 0..) |num, op_index| {
-//         switch (operators & (@as(usize, 1) << @intCast(op_index))) {
-//             0 => result += num,
-//             else => result *= num,
-//         }
-//     }
-//     return result;
-// }
+fn solveOpSequence(nums: []const u64, operators: usize) u64 {
+    var result = nums[0];
+    for (nums[1..], 0..) |num, op_index| {
+        switch (operators & (@as(usize, 1) << @intCast(op_index))) {
+            0 => result += num,
+            else => result *= num,
+        }
+    }
+    return result;
+}
 
 pub fn day7(fin: *const std.io.AnyReader) !void {
     var sum1: u64 = 0;
@@ -62,7 +58,7 @@ pub fn day7(fin: *const std.io.AnyReader) !void {
 
     var fin_buffer: [128]u8 = undefined;
 
-    while (try fin.readUntilDelimiterOrEof(&fin_buffer, '\n')) |line| {
+    main_while: while (try fin.readUntilDelimiterOrEof(&fin_buffer, '\n')) |line| {
         var tokenizer = std.mem.tokenizeAny(u8, line, ": ");
 
         const result = try std.fmt.parseInt(u64, tokenizer.next().?, 10);
@@ -79,21 +75,20 @@ pub fn day7(fin: *const std.io.AnyReader) !void {
         const operator_count: usize = nums_count - 1;
 
         // Original Part One Code
-        // const op_cap: usize = @as(usize, 1) << @intCast(operator_count);
-        // for (0..op_cap) |op_sequence| {
-        //     if (solveOpSequence(nums_slice, op_sequence) == result) {
-        //         sum1 += result;
-        //         sum2 += result;
-        //         continue :main_while;
-        //     }
-        // }
+        const op_cap: usize = @as(usize, 1) << @intCast(operator_count);
+        for (0..op_cap) |op_sequence| {
+            if (solveOpSequence(nums_slice, op_sequence) == result) {
+                sum1 += result;
+                sum2 += result;
+                continue :main_while;
+            }
+        }
 
         // Part Two
         var op_cat_sequence = OpWithConcatSequence.initAllAdd(operator_count);
         while (blk: {
-            const calc = op_cat_sequence.solve(nums_slice);
-            if (calc.result == result) {
-                if (calc.no_concat) sum1 += result;
+            if (op_cat_sequence.solve(nums_slice) == result) {
+                // if (calc.no_concat) sum1 += result;
                 sum2 += result;
                 break :blk false;
             }
