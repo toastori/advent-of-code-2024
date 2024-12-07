@@ -49,6 +49,7 @@ pub fn main() !void {
         4 => try days.day4(&fin.any(), &file),
         5 => try days.day5(&fin.any()),
         6 => try days.day6(allocator, &fin.any()),
+        7 => try days.day7(&fin.any()),
         else => std.debug.print("Day{d} not available\n", .{day}),
     }
 }
