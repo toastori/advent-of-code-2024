@@ -32,8 +32,8 @@ pub fn day8(allocator: std.mem.Allocator, fin: *const std.io.AnyReader) !void {
     var fin_buffer: [64]u8 = undefined;
 
     var antenna_map = std.AutoHashMap(u8, std.ArrayListUnmanaged(Vec2)).init(allocator);
-    var antinode_map1 = std.AutoHashMap(Vec2, bool).init(allocator);
-    var antinode_map2 = std.AutoHashMap(Vec2, bool).init(allocator);
+    var antinode_map1 = std.AutoHashMap(Vec2, void).init(allocator);
+    var antinode_map2 = std.AutoHashMap(Vec2, void).init(allocator);
 
     // Read file
     while (try fin.readUntilDelimiterOrEof(&fin_buffer, '\n')) |line| : (map_height += 1) {
@@ -63,20 +63,20 @@ pub fn day8(allocator: std.mem.Allocator, fin: *const std.io.AnyReader) !void {
                 var pos2 = Vec2{ .x = node2.x - x_diff, .y = node2.y - y_diff };
 
                 // Part One
-                if (pos1.inside()) try antinode_map1.put(pos1, true); // Extend from node1
-                if (pos2.inside()) try antinode_map1.put(pos2, true); // Extend from node2
+                if (pos1.inside()) try antinode_map1.put(pos1, undefined); // Extend from node1
+                if (pos2.inside()) try antinode_map1.put(pos2, undefined); // Extend from node2
 
                 // Part Two
                 while (blk: { // Extend from node1
                     pos1.subSet(.{ .x = x_diff, .y = y_diff });
                     if (!pos1.inside()) break :blk false;
-                    try antinode_map2.put(pos1, true);
+                    try antinode_map2.put(pos1, undefined);
                     break :blk true;
                 }) {}
                 while (blk: { // Extend from node2
                     pos2.addSet(.{ .x = x_diff, .y = y_diff });
                     if (!pos2.inside()) break :blk false;
-                    try antinode_map2.put(pos2, true);
+                    try antinode_map2.put(pos2, undefined);
                     break :blk true;
                 }) {}
             }
