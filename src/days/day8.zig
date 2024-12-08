@@ -31,7 +31,7 @@ pub fn day8(allocator: std.mem.Allocator, fin: *const std.io.AnyReader) !void {
 
     var fin_buffer: [64]u8 = undefined;
 
-    var antenna_map = std.AutoHashMap(u8, std.ArrayList(Vec2)).init(allocator);
+    var antenna_map = std.AutoHashMap(u8, std.ArrayListUnmanaged(Vec2)).init(allocator);
     var antinode_map1 = std.AutoHashMap(Vec2, bool).init(allocator);
     var antinode_map2 = std.AutoHashMap(Vec2, bool).init(allocator);
 
@@ -42,9 +42,9 @@ pub fn day8(allocator: std.mem.Allocator, fin: *const std.io.AnyReader) !void {
             const xi: i32 = @intCast(x);
             if (node != '.') {
                 if (antenna_map.contains(node)) { // Append to existing arraylist
-                    try antenna_map.getPtr(node).?.append(.{ .x = xi, .y = map_height });
+                    try antenna_map.getPtr(node).?.append(allocator, .{ .x = xi, .y = map_height });
                 } else { // New node then make new key (allocate arraylist)
-                    try antenna_map.put(node, try std.ArrayList(Vec2).initCapacity(allocator, 2));
+                    try antenna_map.put(node, try std.ArrayListUnmanaged(Vec2).initCapacity(allocator, 2));
                     antenna_map.getPtr(node).?.appendAssumeCapacity(.{ .x = xi, .y = map_height });
                 }
             }
