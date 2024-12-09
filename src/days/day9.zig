@@ -1,6 +1,7 @@
 const std = @import("std");
 
-const EMPTY: comptime_int = std.math.maxInt(usize);
+const EMPTY = std.math.maxInt(usize);
+
 
 fn sum_mul(value: usize, num_count: usize, count: usize) usize {
     const off_count = num_count + count;
@@ -12,6 +13,10 @@ fn sum_mul(value: usize, num_count: usize, count: usize) usize {
 const combo = struct {
     value: usize,
     count: usize,
+
+    fn isEmpty(self: @This()) bool {
+        return self.value == EMPTY;
+    }
 };
 
 fn calc_checksum(source: *const std.ArrayList(combo)) !usize {
@@ -24,7 +29,7 @@ fn calc_checksum(source: *const std.ArrayList(combo)) !usize {
 
     for (source.items, 0..) |num, i| {
         if (i >= read_backward.items.len - 1) break;
-        if (num.value != EMPTY) {
+        if (!num.isEmpty()) {
             result += sum_mul(num.value, num.count, count);
             count += num.count;
             continue;
@@ -32,7 +37,7 @@ fn calc_checksum(source: *const std.ArrayList(combo)) !usize {
 
         var empty_count = num.count;
         while (empty_count != 0 and i < read_backward.items.len - 1) {
-            if (read_backward.getLast().value == std.math.maxInt(usize)) {
+            if (read_backward.getLast().isEmpty()) {
                 _ = read_backward.pop();
                 continue;
             }
@@ -65,11 +70,11 @@ fn defragment(source: *std.ArrayList(combo)) !void {
     var back_index: usize = source.items.len - 1;
 
     while (back_index > 1) : (back_index -= 1) {
-        if (source.items[back_index].value == EMPTY) continue;
+        if (source.items[back_index].isEmpty()) continue;
         const last = source.items[back_index];
         var front_index: usize = 1;
         while (front_index < back_index) : (front_index += 1) {
-            if (source.items[front_index].value != EMPTY or // Not space
+            if (!source.items[front_index].isEmpty() or // Not space
                 source.items[front_index].count < last.count // Not fit
             ) continue;
 
@@ -83,7 +88,7 @@ fn defragment(source: *std.ArrayList(combo)) !void {
 
             if (back_index == source.items.len - 1) { // Is last item
                 _ = source.pop();
-                while (source.getLast().value == EMPTY) {
+                while (source.getLast().isEmpty()) {
                     _ = source.pop();
                 }
                 back_index = source.items.len;
@@ -91,17 +96,16 @@ fn defragment(source: *std.ArrayList(combo)) !void {
                 source.items[back_index].value = EMPTY;
 
                 const back = source.items[back_index + 1]; // Merge back empty
-                if (back.value == EMPTY) {
-                    source.items[back_index] = .{ .value = EMPTY, .count = last.count + back.count };
+                if (back.isEmpty()) {
+                    source.items[back_index].count += back.count;
                     _ = source.orderedRemove(back_index + 1);
                 }
                 const front = source.items[back_index - 1]; // Merge front empty
-                if (front.value == EMPTY) {
+                if (front.isEmpty()) {
                     source.items[back_index - 1].count += source.items[back_index].count;
                     _ = source.orderedRemove(back_index);
                 }
             }
-
             break;
         }
     }
@@ -125,7 +129,7 @@ pub fn day9(allocator: std.mem.Allocator, fin: *const std.io.AnyReader) !void {
         } else break;
     }
 
-    if (sequence.getLast().value == EMPTY) _ = sequence.pop();
+    if (sequence.getLast().isEmpty()) _ = sequence.pop();
 
     const sum1 = try calc_checksum(&sequence);
 
@@ -136,7 +140,7 @@ pub fn day9(allocator: std.mem.Allocator, fin: *const std.io.AnyReader) !void {
 
     for (sequence.items) |num| {
         defer count += num.count;
-        if (num.value == EMPTY) continue;
+        if (num.isEmpty()) continue;
         sum2 += sum_mul(num.value, num.count, count);
     }
 
