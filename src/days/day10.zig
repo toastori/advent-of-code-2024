@@ -88,11 +88,10 @@ pub fn day10(allocator: std.mem.Allocator, fin: *const std.io.AnyReader) !void {
         path.setRangeValue(.{ .start = 0, .end = map.items.len }, false);
     }
 
-    for (starting_pt.items) |start| { // Part One
+    for (starting_pt.items) |start| { // Part Two
         const routes = part2('0' - 1, start);
         sum2 += routes;
     }
-
 
     std.debug.print("Part One: {d}\n", .{sum1});
     std.debug.print("Part Two: {d}\n", .{sum2});
