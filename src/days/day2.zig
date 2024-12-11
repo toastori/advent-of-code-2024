@@ -56,12 +56,11 @@ pub fn day2(allocator: std.mem.Allocator, fin: *const std.io.AnyReader) !void {
         if (safe) safe_lines2 += 1;
 
         // Part One
-        token_stream.reset();
-        var previous = try std.fmt.parseInt(i16, token_stream.next().?, 10);
+        var previous = line_list.items[0];
         var line_order: Order = .unknown;
 
-        while (token_stream.next()) |word| {
-            const current: i16 = try std.fmt.parseInt(i16, word, 10);
+        for (line_list.items[1..]) |num| {
+            const current: i16 = num;
 
             const difference: i16 = current - previous;
             if (@abs(difference) == 0 or @abs(difference) > 3) continue :main_while;
