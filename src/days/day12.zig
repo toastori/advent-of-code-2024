@@ -161,7 +161,6 @@ pub fn day12(allocator: std.mem.Allocator, fin: *const std.io.AnyReader) !void {
     }
 
     for (counts_area.items, counts_sides.items) |area, side| { // Add up for part2
-        std.debug.print("{d}, {d}\n", .{ area, side });
         sum2 += @intCast(area * side);
     }
 
