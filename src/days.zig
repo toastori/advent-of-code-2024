@@ -9,3 +9,4 @@ pub const day8 = @import("days/day8.zig").day8;
 pub const day9 = @import("days/day9.zig").day9;
 pub const day10 = @import("days/day10.zig").day10;
 pub const day11 = @import("days/day11.zig").day11;
+pub const day12 = @import("days/day12.zig").day12;

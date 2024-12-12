@@ -2,7 +2,6 @@ const std = @import("std");
 
 const EMPTY = std.math.maxInt(usize);
 
-
 fn sum_mul(value: usize, num_count: usize, count: usize) usize {
     const off_count = num_count + count;
     return if (@import("builtin").mode == .Debug) blk: {
