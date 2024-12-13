@@ -1,7 +1,7 @@
 const std = @import("std");
 
 fn isWhole(num: f64) bool {
-    return @as(f64, @floatFromInt(@as(u64, @intFromFloat(num)))) == num;
+    return @floor(num) == num;
 }
 
 pub fn day13(fin: *const std.io.AnyReader) !void {
@@ -21,7 +21,7 @@ pub fn day13(fin: *const std.io.AnyReader) !void {
 
         // Target
         const line3 = try fin.readUntilDelimiterOrEof(&fin_buffer, '\n') orelse break;
-        var tokenizer = std.mem.tokenizeAny(u8, line3[7..], "XY=, ");
+        var tokenizer = std.mem.tokenizeAny(u8, line3[9..], "Y=, ");
         const target_x1 = try std.fmt.parseFloat(f64, tokenizer.next().?);
         const target_y1 = try std.fmt.parseFloat(f64, tokenizer.next().?);
         const target_x2 = target_x1 + 10000000000000;
@@ -47,7 +47,7 @@ pub fn day13(fin: *const std.io.AnyReader) !void {
         const a2 = det1_2 / det;
         const b2 = det2_2 / det;
 
-        if (a1 >= 0 and a1 <= 100 and b1 >= 0 and b1 <= 100 and isWhole(a1) and isWhole(b1)) sum1 += a1 * 3 + b1;
+        if (a1 >= 0 and b1 >= 0 and isWhole(a1) and isWhole(b1)) sum1 += a1 * 3 + b1;
         if (a2 >= 0 and b2 >= 0 and isWhole(a2) and isWhole(b2)) sum2 += a2 * 3 + b2;
 
         _ = fin.readUntilDelimiterOrEof(&fin_buffer, '\n') catch break;
