@@ -66,7 +66,7 @@ pub fn day14(allocator: std.mem.Allocator, fin: *const std.io.AnyReader) !void {
     var count: u32 = 0;
     var map = try std.DynamicBitSet.initEmpty(allocator, map_width * map_height);
 
-    try stdout.write("Enter to continue, any other input to stop: \n");
+    _ = try stdout.write("Enter to continue, any other input to stop: \n");
     try bw.flush();
 
     while (try stdin.readByte() == '\n') {
