@@ -58,56 +58,50 @@ pub fn day14(allocator: std.mem.Allocator, fin: *const std.io.AnyReader) !void {
 
     std.debug.print("Part One: {d}\n", .{sum1});
 
-    const stdin = std.io.getStdIn().reader();
     const stdout_file = std.io.getStdOut().writer();
     var bw = std.io.BufferedWriter(6144, @TypeOf(stdout_file)){ .unbuffered_writer = stdout_file };
     const stdout = bw.writer();
 
-    var count: u32 = 0;
+    var sum2: u32 = 0;
     var map = try std.DynamicBitSet.initEmpty(allocator, map_width * map_height);
 
-    _ = try stdout.write("Enter to continue, any other input to stop: \n");
-    try bw.flush();
-
-    while (try stdin.readByte() == '\n') {
-        while (blk: {
-            var hav_line = false;
-            for (robots.items) |robot| {
-                map.set(robot.toIndex());
-            }
-            outer_for: for (0..map_height) |y| {
-                var num_in_row: u8 = 0;
-                for (0..map_width) |x| {
-                    if (map.isSet(y * map_width + x)) {
-                        num_in_row += 1;
-                    } else {
-                        num_in_row = 0;
-                    }
-                    if (num_in_row > 25) {
-                        hav_line = true;
-                        break :outer_for;
-                    }
+    while (blk: {
+        var hav_line = false;
+        for (robots.items) |robot| {
+            map.set(robot.toIndex());
+        }
+        outer_for: for (38 - 4..38 + 4) |y| {
+            var num_in_row: u8 = 0;
+            for (0..map_width) |x| {
+                if (map.isSet(y * map_width + x)) {
+                    num_in_row += 1;
+                } else {
+                    num_in_row = 0;
+                }
+                if (num_in_row > 25) {
+                    hav_line = true;
+                    break :outer_for;
                 }
             }
-            if (hav_line) {
-                var idx: usize = 0;
-                for (0..map_height) |_| {
-                    for (0..map_width) |_| {
-                        try stdout.writeByte(if (map.isSet(idx)) @intCast('#') else @intCast('.'));
-                        try stdout.writeByte(' ');
-                        idx += 1;
-                    }
-                    try stdout.writeByte('\n');
+        }
+        if (hav_line) {
+            var idx: usize = 0;
+            for (0..map_height) |_| {
+                for (0..map_width) |_| {
+                    try stdout.writeByte(if (map.isSet(idx)) @intCast('#') else @intCast('.'));
+                    try stdout.writeByte(' ');
+                    idx += 1;
                 }
-                _ = try stdout.write(try std.fmt.bufPrint(&fin_buffer, "iter: {d}s\n", .{count}));
+                try stdout.writeByte('\n');
             }
+            _ = try stdout.write(try std.fmt.bufPrint(&fin_buffer, "Part Two: {d}\n", .{sum2}));
             try bw.flush();
-            count += 1;
-            for (robots.items) |*robot| {
-                robot.run();
-            }
-            map.setRangeValue(.{ .start = 0, .end = map_width * map_height }, false);
-            break :blk !hav_line;
-        }) {}
-    }
+        }
+        sum2 += 1;
+        for (robots.items) |*robot| {
+            robot.run();
+        }
+        map.setRangeValue(.{ .start = 0, .end = map_width * map_height }, false);
+        break :blk !hav_line;
+    }) {}
 }
