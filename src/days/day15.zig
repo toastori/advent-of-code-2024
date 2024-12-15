@@ -10,10 +10,6 @@ const Vec2 = struct {
     x: u32,
     y: u32,
 
-    fn eql(self: @This(), other: @This()) bool {
-        return self.x == other.x and self.y == other.y;
-    }
-
     fn front(self: @This(), command: u8) Vec2 {
         return switch (command) {
             '^' => self.up(),
@@ -51,7 +47,6 @@ const Vec2 = struct {
         const ysize: usize = @intCast(self.y);
         return ysize * map_width + xsize;
     }
-
     fn toIndex2(self: @This()) usize {
         const xsize: usize = @intCast(self.x);
         const ysize: usize = @intCast(self.y);
@@ -59,50 +54,44 @@ const Vec2 = struct {
     }
 };
 
-const Node = struct {
-    item: u8,
-    pos: Vec2,
-};
-
 var robot: Vec2 = undefined;
 var robot2: Vec2 = undefined;
 
 fn pushVert(allocator: std.mem.Allocator, command: u8) !void {
     var nodes_to_check = std.ArrayList(Vec2).init(allocator);
-    var nodes_to_push = std.MultiArrayList(Node){};
-    var checked_map = std.AutoHashMap(Vec2, void).init(allocator);
-    defer nodes_to_check.deinit();
-    defer nodes_to_push.deinit(allocator);
-    defer checked_map.deinit();
+    var checked_map = std.AutoHashMap(Vec2, u8).init(allocator);
+    defer {
+        nodes_to_check.deinit();
+        checked_map.deinit();
+    }
 
     try nodes_to_check.append(robot2);
 
     while (nodes_to_check.popOrNull()) |node| {
-        const here = map2.items[node.toIndex2()];
         switch (map2.items[node.front(command).toIndex2()]) {
             '#' => return,
-            else => |c| {
-                try nodes_to_push.append(allocator, .{ .item = here, .pos = node });
-                if (c == '.') continue;
-            },
+            '.' => continue,
+            else => {},
         }
 
         if (!checked_map.contains(node.front(command))) {
             const front_item = map2.items[node.front(command).toIndex2()];
             try nodes_to_check.append(node.front(command));
-            try checked_map.put(node.front(command), undefined);
-            const also = if (front_item == '[')
+            try checked_map.put(node.front(command), front_item);
+
+            const also = if (front_item == '[') // Other side of the box
                 node.front(command).right()
             else
                 node.front(command).left();
             try nodes_to_check.append(also);
-            try checked_map.put(also, undefined);
+            try checked_map.put(also, if (front_item == '[') @intCast(']') else @intCast('['));
         }
     }
 
-    while (nodes_to_push.popOrNull()) |node| {
-        if (!checked_map.contains(node.pos.back(command))) map2.items[node.pos.toIndex2()] = '.';
-        map2.items[node.pos.front(command).toIndex2()] = node.item;
+    var hashmap_iter = checked_map.iterator();
+    while (hashmap_iter.next()) |node| {
+        if (!checked_map.contains(node.key_ptr.back(command))) map2.items[node.key_ptr.toIndex2()] = '.';
+        map2.items[node.key_ptr.front(command).toIndex2()] = node.value_ptr.*;
     }
     robot2 = robot2.front(command);
 }
@@ -190,9 +179,11 @@ pub fn day15(allocator: std.mem.Allocator, fin: *const std.io.AnyReader) !void {
                     var box_index: usize = 0;
 
                     var start_index = @min(front2.toIndex2() + 1, next_front.toIndex2() + 1);
-                    if (command == '<') start_index -= 1;
                     var end_index = @max(front2.toIndex2() + 1, next_front.toIndex2() + 1);
-                    if (command == '<') end_index -= 1;
+                    if (command == '<') {
+                        start_index -= 1;
+                        end_index -= 1;
+                    }
 
                     for (map2.items[start_index..end_index]) |*node| {
                         node.* = box[box_index];
@@ -203,14 +194,13 @@ pub fn day15(allocator: std.mem.Allocator, fin: *const std.io.AnyReader) !void {
                     robot2 = front2;
                     break; // no more loop if moved
                 }
-            } else {
+            } else { // Vertical
                 try pushVert(allocator, command);
             }
         }
     }
 
     var sum1: usize = 0;
-
     for (0..map_height) |i| {
         for (0..map_width) |j| {
             if (map.items[i * map_width + j] == 'O') {
