@@ -95,15 +95,17 @@ fn solveMap(allocator: std.mem.Allocator, deer: Deer, goal: Vec2) !usize {
     var shortest: usize = std.math.maxInt(usize);
     var least_turn: usize = std.math.maxInt(usize);
 
-    var commands: std.MultiArrayList(Deer) = std.MultiArrayList(Deer){};
-    defer commands.deinit(allocator);
+    var commands = std.ArrayList(Deer).init(allocator);
+    defer commands.deinit();
     var been = std.AutoHashMap(Vec2, usize).init(allocator); // pos and turn
     defer been.deinit();
 
-    try commands.append(allocator, deer);
-    while (commands.popOrNull()) |com| {
-        var this_deer = com;
-        if (this_deer.travel.turns > least_turn) continue;
+    try commands.append(deer);
+
+    var cmd_idx: usize = 0;
+    while (cmd_idx < commands.items.len) : (cmd_idx += 1) {
+        var this_deer = commands.items[cmd_idx];
+        if (this_deer.travel.turns > least_turn) break;
         while (true) {
             if (this_deer.pos.eql(goal)) {
                 if (least_turn < this_deer.travel.turns or
@@ -122,7 +124,7 @@ fn solveMap(allocator: std.mem.Allocator, deer: Deer, goal: Vec2) !usize {
                 for (Direction.directions) |d| {
                     if (this_deer.direction.opposite() == d or this_deer.direction == d or
                         map.items[this_deer.pos.direction(d).toIndex()] == WALL) continue;
-                    try commands.append(allocator, .{
+                    try commands.append(.{
                         .pos = this_deer.pos,
                         .travel = .{
                             .steps = this_deer.travel.steps,
