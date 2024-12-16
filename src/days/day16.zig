@@ -62,8 +62,8 @@ const Vec2 = struct {
 };
 
 const Travel = struct {
-    steps: usize,
-    turns: usize,
+    steps: u32,
+    turns: u32,
 };
 
 const Deer = struct {
@@ -72,32 +72,22 @@ const Deer = struct {
     direction: Direction,
 
     fn go(self: *@This()) void {
-        self.pos = switch (self.direction) {
-            .up => self.pos.up(),
-            .right => self.pos.right(),
-            .down => self.pos.down(),
-            .left => self.pos.left(),
-        };
+        self.pos = self.front();
         self.travel.steps += 1;
     }
 
     fn front(self: @This()) Vec2 {
-        return switch (self.direction) {
-            .up => self.pos.up(),
-            .right => self.pos.right(),
-            .down => self.pos.down(),
-            .left => self.pos.left(),
-        };
+        return self.pos.direction(self.direction);
     }
 };
 
-fn solveMap(allocator: std.mem.Allocator, deer: Deer, goal: Vec2) !usize {
-    var shortest: usize = std.math.maxInt(usize);
-    var least_turn: usize = std.math.maxInt(usize);
+fn solveMap(allocator: std.mem.Allocator, deer: Deer, goal: Vec2) !u32 {
+    var shortest: u32 = std.math.maxInt(u32);
+    var least_turn: u32 = std.math.maxInt(u32);
 
-    var commands = std.ArrayList(Deer).init(allocator);
+    var commands = try std.ArrayList(Deer).initCapacity(allocator, map_width);
     defer commands.deinit();
-    var been = std.AutoHashMap(Vec2, usize).init(allocator); // pos and turn
+    var been = std.AutoHashMap(Vec2, u32).init(allocator); // pos and turn
     defer been.deinit();
 
     try commands.append(deer);
@@ -108,18 +98,14 @@ fn solveMap(allocator: std.mem.Allocator, deer: Deer, goal: Vec2) !usize {
         if (this_deer.travel.turns > least_turn) break;
         while (true) {
             if (this_deer.pos.eql(goal)) {
-                if (least_turn < this_deer.travel.turns or
-                    shortest < this_deer.travel.steps)
-                {
-                    break;
-                }
+                if (shortest < this_deer.travel.steps) break;
+
                 shortest = this_deer.travel.steps;
                 least_turn = this_deer.travel.turns;
                 break;
             }
 
-            const turn_history = been.get(this_deer.pos);
-            const turn: usize = if (turn_history) |entry| @min(entry, least_turn) else least_turn;
+            const turn: usize = @min(been.get(this_deer.pos) orelse least_turn, least_turn);
             if (this_deer.travel.turns < turn) {
                 for (Direction.directions) |d| {
                     if (this_deer.direction.opposite() == d or this_deer.direction == d or
@@ -133,18 +119,15 @@ fn solveMap(allocator: std.mem.Allocator, deer: Deer, goal: Vec2) !usize {
                         .direction = d,
                     });
                     const entry = try been.getOrPut(this_deer.pos);
-                    if (entry.found_existing) {
-                        if (entry.value_ptr.* > this_deer.travel.turns + 1) {
-                            entry.value_ptr.* = this_deer.travel.turns + 1;
-                        }
-                    } else {
-                        entry.value_ptr.* = this_deer.travel.turns + 1;
+                    switch (entry.found_existing) {
+                        true => entry.value_ptr.* = @min(entry.value_ptr.*, this_deer.travel.turns + 1),
+                        false => entry.value_ptr.* = this_deer.travel.turns + 1,
                     }
                 }
             }
-            if (map.items[this_deer.pos.toIndex()] > @as(u32, @intCast(this_deer.travel.turns + 1)) * 1000 + this_deer.travel.steps) {
-                map.items[this_deer.pos.toIndex()] = @intCast((this_deer.travel.turns + 1) * 1000 + this_deer.travel.steps);
-            }
+            const map_mark: u32 = (this_deer.travel.turns + 1) * 1000 + this_deer.travel.steps;
+            map.items[this_deer.pos.toIndex()] = @min(map.items[this_deer.pos.toIndex()], map_mark);
+
             if (map.items[this_deer.front().toIndex()] == WALL) break;
             this_deer.go();
         }
@@ -224,17 +207,13 @@ fn bestSeat(allocator: std.mem.Allocator, goal: Vec2) !usize {
 pub fn day16(allocator: std.mem.Allocator, fin: *const std.io.AnyReader) !void {
     map = try std.ArrayList(u32).initCapacity(allocator, 140 * 140);
     var deer: Deer = undefined;
-    var found_d = false;
     var goal: Vec2 = undefined;
-    var found_g = false;
 
     var fin_buffer: [160]u8 = undefined;
     while (try fin.readUntilDelimiterOrEof(&fin_buffer, '\n')) |line| : (map_height += 1) {
         for (line, 0..) |c, i| {
             try map.append(if (c == '#') @intCast(WALL) else @intCast(WALL - 1));
-            if (found_d and found_g) continue;
             if (c == 'S') {
-                found_d = true;
                 deer = .{
                     .pos = .{ .x = @intCast(i), .y = @intCast(map_height) },
                     .travel = .{
@@ -244,11 +223,8 @@ pub fn day16(allocator: std.mem.Allocator, fin: *const std.io.AnyReader) !void {
                     .direction = .right,
                 };
                 map.items[map.items.len - 1] = 0;
-                continue;
             } else if (c == 'E') {
-                found_g = true;
                 goal = .{ .x = @intCast(i), .y = @intCast(map_height) };
-                continue;
             }
         }
     }
