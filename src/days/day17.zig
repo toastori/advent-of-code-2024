@@ -20,7 +20,7 @@ fn run(prog: []u8, output: *std.ArrayList(u8)) !void { // return last jump
         const opr = prog[ptr + 1];
 
         switch (ins) {
-            0 => reg_a /= std.math.pow(usize, 2, valueOf(opr)),
+            0 => reg_a >>= @intCast(valueOf(opr)),
             1 => reg_b ^= valueOf(opr),
             2 => reg_b = valueOf(opr) & 0b111,
             3 => {
@@ -34,8 +34,8 @@ fn run(prog: []u8, output: *std.ArrayList(u8)) !void { // return last jump
                 const o_value: u8 = @intCast(valueOf(opr) % 8);
                 try output.append(o_value);
             },
-            6 => reg_b = reg_a / std.math.pow(usize, 2, valueOf(opr)),
-            7 => reg_c = reg_a / std.math.pow(usize, 2, valueOf(opr)),
+            6 => reg_b = reg_a >> @intCast(valueOf(opr)),
+            7 => reg_c = reg_a >> @intCast(valueOf(opr)),
             else => unreachable,
         }
 
