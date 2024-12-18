@@ -49,7 +49,7 @@ pub fn main() !void {
         4 => try days.day4(&fin.any(), &file),
         5 => try days.day5(&fin.any()),
         6 => try days.day6(allocator, &fin.any()),
-        7 => try days.day7(&fin.any()),
+        7 => try days.day7(allocator, &fin.any()),
         8 => try days.day8(allocator, &fin.any()),
         9 => try days.day9(allocator, &fin.any()),
         10 => try days.day10(allocator, &fin.any()),

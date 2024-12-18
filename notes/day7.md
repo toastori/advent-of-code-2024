@@ -52,5 +52,11 @@ It now runs 203.8ms...212.0ms, more than 3x the speed of the original code!\
 \
 It shows that, the big O is not that important for performance. (x\
 \
+
+* Times are measured with hyperfine on a R7-7700X\
 \
-* Times are measured with hyperfine on a R7-7700X
+
+## Update [2024-12-18]
+
+Switched to recussion style function (with ArrayList as command queue)\
+The performance further improved to 11.8ms...12.7ms as of now

@@ -1,63 +1,51 @@
 const std = @import("std");
 
-const OpWithConcatSequence = struct {
-    arr: [12]u2,
-    len: usize,
-
-    fn initAllAdd(len: usize) @This() {
-        return .{
-            .arr = [_]u2{0} ** 12,
-            .len = len,
-        };
+// Return `true` if solvable
+fn solveOp(allocator: std.mem.Allocator, nums: []const u64, target: u64, comptime do_concat: bool) !bool {
+    var commands = [2]std.ArrayList(u64){ undefined, undefined };
+    inline for (&commands) |*cmd_queue| {
+        cmd_queue.* = try std.ArrayList(u64).initCapacity(allocator, nums.len * nums.len * if (comptime do_concat) nums.len else 1);
     }
+    defer inline for (&commands) |*cmd_queue| {
+        cmd_queue.deinit();
+    };
 
-    fn inc(self: *@This()) bool {
-        for (&self.arr) |*op| {
-            if (op.* == 2) {
-                op.* = 0;
-            } else {
-                op.* += 1;
-                break;
+    try commands[0].append((nums[0] & std.math.maxInt(u32)));
+
+    var cmd_queue_idx: usize = 0;
+    var processed: usize = 1;
+    while (processed < nums.len) {
+        for (commands[cmd_queue_idx].items) |cmd| {
+            const add = cmd + (nums[processed] & std.math.maxInt(u32));
+            const mul = cmd * (nums[processed] & std.math.maxInt(u32));
+
+            if (add <= target) try commands[cmd_queue_idx ^ 1].append(add);
+            if (mul <= target) try commands[cmd_queue_idx ^ 1].append(mul);
+
+            if (comptime do_concat) {
+                const cat = cmd * (nums[processed] >> 32) + (nums[processed] & std.math.maxInt(u32));
+                if (cat <= target) try commands[cmd_queue_idx ^ 1].append(cat);
             }
         }
-        return self.arr[self.len] == 0;
+        commands[cmd_queue_idx].clearRetainingCapacity();
+        cmd_queue_idx ^= 1;
+        processed += 1;
     }
 
-    // Return `result` and whether concat involved in calculation
-    fn solve(self: @This(), nums: []const u64) u64 {
-        var result = nums[0] & std.math.maxInt(u32);
-        for (nums[1..], self.arr[0..self.len]) |num, op| {
-            switch (op) {
-                0 => result += num & std.math.maxInt(u32),
-                1 => result *= num & std.math.maxInt(u32),
-                else => {
-                    result = result * (num >> 32) + (num & std.math.maxInt(u32));
-                },
-            }
-        }
-        return result;
+    for (commands[cmd_queue_idx].items) |num| {
+        if (num == target) return true;
     }
-};
 
-// Original Part One Code
-fn solveOpSequence(nums: []const u64, operators: usize) u64 {
-    var result = nums[0] & std.math.maxInt(u32);
-    for (nums[1..], 0..) |num, op_index| {
-        switch (operators & (@as(usize, 1) << @intCast(op_index))) {
-            0 => result += num & std.math.maxInt(u32),
-            else => result *= num & std.math.maxInt(u32),
-        }
-    }
-    return result;
+    return false;
 }
 
-pub fn day7(fin: *const std.io.AnyReader) !void {
+pub fn day7(allocator: std.mem.Allocator, fin: *const std.io.AnyReader) !void {
     var sum1: u64 = 0;
     var sum2: u64 = 0;
 
     var fin_buffer: [128]u8 = undefined;
 
-    main_while: while (try fin.readUntilDelimiterOrEof(&fin_buffer, '\n')) |line| {
+    while (try fin.readUntilDelimiterOrEof(&fin_buffer, '\n')) |line| {
         var tokenizer = std.mem.tokenizeAny(u8, line, ": ");
 
         const result = try std.fmt.parseInt(u64, tokenizer.next().?, 10);
@@ -72,27 +60,15 @@ pub fn day7(fin: *const std.io.AnyReader) !void {
 
         const nums_slice = nums[0..nums_count];
 
-        const operator_count: usize = nums_count - 1;
-
-        // Original Part One Code
-        const op_cap: usize = @as(usize, 1) << @intCast(operator_count);
-        for (0..op_cap) |op_sequence| {
-            if (solveOpSequence(nums_slice, op_sequence) == result) {
-                sum1 += result;
-                sum2 += result;
-                continue :main_while;
-            }
+        // Part One (and if possibly, part two without concat)
+        if (try solveOp(allocator, nums_slice, result, false)) {
+            sum1 += result;
+            sum2 += result;
+            continue;
         }
 
         // Part Two
-        var op_cat_sequence = OpWithConcatSequence.initAllAdd(operator_count);
-        while (blk: {
-            if (op_cat_sequence.solve(nums_slice) == result) {
-                sum2 += result;
-                break :blk false;
-            }
-            break :blk op_cat_sequence.inc();
-        }) {}
+        if (try solveOp(allocator, nums_slice, result, true)) sum2 += result;
     }
 
     std.debug.print("Part One: {d}\n", .{sum1});
