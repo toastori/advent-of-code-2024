@@ -68,4 +68,37 @@ pub fn day17(allocator: std.mem.Allocator, fin: *const std.io.AnyReader) !void {
         if (i < output.items.len - 1) std.debug.print(",", .{});
     }
     std.debug.print("\n", .{});
+
+    var sum2: usize = 0;
+
+    var possible_list: [2]std.ArrayList(usize) = undefined;
+    inline for (&possible_list) |*list| {
+        list.* = std.ArrayList(usize).init(allocator);
+    }
+    try possible_list[0].append(0);
+    var possible_list_idx: usize = 0;
+    main_while: while (true) {
+        for (possible_list[possible_list_idx].items) |possible| {
+            for (0..8) |i| {
+                reg_a = possible + i;
+                reg_b = 0;
+                reg_c = 0;
+                output.clearRetainingCapacity();
+                try run(prog.items, &output);
+                // some prints [reg_a :: output]
+                // std.debug.print("0o{o} :: {any}\n", .{ possible + i, output.items });
+                if (std.mem.eql(u8, prog.items, output.items)) {
+                    sum2 = possible + i;
+                    break :main_while;
+                }
+                if (std.mem.eql(u8, prog.items[(prog.items.len - output.items.len)..], output.items)) {
+                    try possible_list[possible_list_idx ^ 1].append((possible + i) << 3);
+                }
+            }
+        }
+        possible_list[possible_list_idx].clearRetainingCapacity();
+        possible_list_idx ^= 1;
+    }
+
+    std.debug.print("Part Two: {d}\n", .{sum2});
 }
