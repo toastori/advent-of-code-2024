@@ -96,11 +96,9 @@ pub fn day19(allocator: std.mem.Allocator, fin: *const std.io.AnyReader) !void {
     while (try fin.readUntilDelimiterOrEof(&fin_buffer, '\n')) |line| {
         var add1 = false;
         var counts = [_]usize{1} ++ ([_]usize{0} ** 63);
-        var indicator: std.bit_set.IntegerBitSet(64) = std.bit_set.IntegerBitSet(64).initEmpty();
-        indicator.set(0);
 
         for (0..line.len) |i| {
-            if (!indicator.isSet(i)) continue;
+            if (counts[i] == 0) continue;
             const substr = line[i..];
 
             var node = unlimited.getHead();
@@ -111,13 +109,11 @@ pub fn day19(allocator: std.mem.Allocator, fin: *const std.io.AnyReader) !void {
                 if (!node.hasTermination()) continue;
                 if (checked != substr.len - 1) { // not end of string
                     counts[i + checked + 1] += counts[i];
-                    indicator.set(i + checked + 1);
                     continue;
                 }
 
                 // end of string
-                if (indicator.isSet(i)) sum2 += counts[i];
-                indicator.unset(i);
+                sum2 += counts[i];
                 add1 = true;
             }
         }
