@@ -61,6 +61,7 @@ pub fn main() !void {
         16 => try days.day16(allocator, &fin.any()),
         17 => try days.day17(allocator, &fin.any()),
         18 => try days.day18(allocator, &fin.any()),
+        19 => try days.day19(allocator, &fin.any()),
         else => std.debug.print("Day{d} not available\n", .{day}),
     }
 }
