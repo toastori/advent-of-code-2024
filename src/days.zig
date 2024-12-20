@@ -17,3 +17,4 @@ pub const day16 = @import("days/day16.zig").day16;
 pub const day17 = @import("days/day17.zig").day17;
 pub const day18 = @import("days/day18.zig").day18;
 pub const day19 = @import("days/day19.zig").day19;
+pub const day20 = @import("days/day20.zig").day20;
